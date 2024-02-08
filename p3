@@ -1,0 +1,64 @@
+#include <Prizm.h>
+#include <stdlib.h> // For random number generation
+
+Prizm prizm;
+
+const int leftMotorPin = 1; // Left motor pin
+const int rightMotorPin = 0; // Right motor pin
+const int ultrasonicPin = 2; // Ultrasonic sensor pin
+const int lineSensorPin = A0; // Line sensor pin
+
+const int rotateAngle = 90; // Angle for rotation in degrees
+const int pointTurnAngle = 180; // Angle for point turn in degrees
+
+void setup() {
+  prizm.begin();
+  pinMode(lineSensorPin, INPUT);
+  pinMode(ultrasonicPin, INPUT);
+}
+
+void loop() {
+  // Sweep the entire region
+  while (true) {
+    // Check for obstacles
+    int obstacleFront = prizm.readUltrasonic(ultrasonicPin);
+    int obstacleLeft = prizm.readUltrasonic(ultrasonicPin + 1);
+    int obstacleRight = prizm.readUltrasonic(ultrasonicPin + 2);
+
+    // If an obstacle is present in front
+    if (obstacleFront < 20) {
+      // If obstacle is present on both sides
+      if (obstacleLeft < 20 && obstacleRight < 20) {
+        // Perform 180-degree point turn
+        prizm.pointTurn(pointTurnAngle);
+      }
+      // If obstacle is present on left side
+      else if (obstacleLeft < 20) {
+        // Rotate 90 degrees to the right
+        prizm.rotateRight(rotateAngle);
+      }
+      // If obstacle is present on right side
+      else if (obstacleRight < 20) {
+        // Rotate 90 degrees to the left
+        prizm.rotateLeft(rotateAngle);
+      }
+    }
+
+    // Check for black line
+    int lineSensorValue = prizm.readLineSensor(lineSensorPin);
+    if (lineSensorValue < 1000) {
+      // Randomly choose to turn right or left
+      int turnDirection = random(2); // Generate random number (0 or 1)
+      if (turnDirection == 0) {
+        // Turn right
+        prizm.rotateRight(rotateAngle);
+      } else {
+        // Turn left
+        prizm.rotateLeft(rotateAngle);
+      }
+    }
+
+    // Move forward if no obstacles or black line detected
+    prizm.moveForward();
+  }
+}
