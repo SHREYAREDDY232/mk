@@ -1,0 +1,41 @@
+#include <Prizm.h>
+
+Prizm prizm;
+
+const int leftMotorPin = 1; // Left motor pin
+const int rightMotorPin = 0; // Right motor pin
+const int ultrasonicPin = 2; // Ultrasonic sensor pin
+
+const float distanceForward = 150; // Distance to travel forward in cm
+const float turnAngle = 30; // Angle for swing turn in degrees
+const float additionalDistance = 100; // Additional distance to travel after swing turn in cm
+
+void setup() {
+  prizm.begin();
+  pinMode(ultrasonicPin, INPUT);
+}
+
+void loop() {
+  // Step 1: Travel 1.5m forward
+  prizm.moveForward(distanceForward);
+  delay(1000); // Stop for 1 sec
+
+  // Step 2: Take a swing turn for 30 degrees
+  prizm.swingTurn(turnAngle);
+  delay(1000); // Stop for 1 sec
+
+  // Step 3: Travel 100cm further with a linear velocity of 0.1m/s
+  prizm.setMotorSpeed(leftMotorPin, 10); // Set linear velocity to 0.1m/s (10 cm/s)
+  prizm.setMotorSpeed(rightMotorPin, 10);
+  delay(1000); // Stop for 1 sec
+
+  // Step 4: Wait for obstacle clearance
+  while (prizm.readUltrasonic(ultrasonicPin) < 20) {
+    // Obstacle detected, stop movement
+    prizm.stopMovement();
+    delay(100); // Check for obstacle clearance every 100ms
+  }
+
+  // Step 5: Return to exact starting position at any speed
+  prizm.moveBackward(distanceForward + additionalDistance);
+}
